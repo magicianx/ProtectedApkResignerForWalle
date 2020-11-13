@@ -69,33 +69,43 @@ def createChannelsDir():
   except Exception:
     pass
 
-    
+def findApk(path):
+  for file in os.listdir(path):
+    if os.path.isfile(path + "/" + file):
+        extension = os.path.splitext(file)[1][1:]
+        if extension in 'apk':
+          return file
+
+conf = config.getSection(sys.argv[1])
+
 #当前脚本文件所在目录
 parentPath = curFileDir() + getBackslash()
 
 #config
+protectedSourceApkDirPath = conf["protectedSourceApkDirPath"]
+apkName = findApk(protectedSourceApkDirPath)
+
 libPath = parentPath + "lib" + getBackslash()
-buildToolsPath =  config.sdkBuildToolPath + getBackslash()
+buildToolsPath =  conf["sdkBuildToolPath"] + getBackslash()
 checkAndroidV2SignaturePath = libPath + "CheckAndroidV2Signature.jar"
 walleChannelWritterPath = libPath + "walle-cli-all.jar"
-keystorePath = config.keystorePath
-keyAlias = config.keyAlias
-keystorePassword = config.keystorePassword
-keyPassword = config.keyPassword
+keystorePath = conf["keystorePath"]
+keyAlias = conf["keyAlias"]
+keystorePassword = conf["keystorePassword"]
+keyPassword = conf["keyPassword"]
 channelsOutputFilePath = parentPath + "channels"
 channelFilePath = parentPath +"channel"
-protectedSourceApkPath = parentPath + config.protectedSourceApkName
-
+protectedSourceApkPath = parentPath + apkName
 
 # 检查自定义路径，并作替换
-if len(config.protectedSourceApkDirPath) > 0:
-  protectedSourceApkPath = config.protectedSourceApkDirPath + getBackslash() + config.protectedSourceApkName
+if len(protectedSourceApkDirPath) > 0:
+  protectedSourceApkPath = protectedSourceApkDirPath + getBackslash() + apkName
 
-if len(config.channelsOutputFilePath) > 0:
-  channelsOutputFilePath = config.channelsOutputFilePath
+if len(conf["channelsOutputFilePath"]) > 0:
+  channelsOutputFilePath = conf["channelsOutputFilePath"]
 
-if len(config.channelFilePath) > 0:
-  channelFilePath = config.channelFilePath
+if len(conf["channelFilePath"]) > 0:
+  channelFilePath = conf["channelFilePath"]
 
 
 zipalignedApkPath = protectedSourceApkPath[0 : -4] + "_aligned.apk"
@@ -122,8 +132,8 @@ checkV2Shell = "java -jar " + checkAndroidV2SignaturePath + " " + signedApkPath;
 os.system(checkV2Shell)
 
 #写入渠道
-if len(config.extraChannelFilePath) > 0:
-  writeChannelShell = "java -jar " + walleChannelWritterPath + " batch2 -f " + config.extraChannelFilePath + " " + signedApkPath + " " + channelsOutputFilePath
+if len(conf["extraChannelFilePath"]) > 0:
+  writeChannelShell = "java -jar " + walleChannelWritterPath + " batch2 -f " + conf["extraChannelFilePath"] + " " + signedApkPath + " " + channelsOutputFilePath
 else:
   writeChannelShell = "java -jar " + walleChannelWritterPath + " batch -f " + channelFilePath + " " + signedApkPath + " " + channelsOutputFilePath
 
